@@ -1,12 +1,13 @@
 ---
-title: "From Touches to Goals: Modeling the Efficacy of Possession in Football"
-subtitle: "Evaluating Poisson vs. Negative Binomial Models in Predicting Home Team Success"
+title: "My title"
+subtitle: "My subtitle if needed"
 author: 
-  - Siqi Fei
+  - First author
+  - Another author
 thanks: "Code and data are available at: LINK."
 date: today
 date-format: long
-abstract: "This study delves into the intricate relationship between a football team's ball possession, as indicated by the number of times players touch the ball, and the team's scoring success. Through rigorous statistical analysis, we compared Poisson and negative binomial regression models to assess which better predicts the final score based on possession data. Our findings revealed a nuanced connection where more ball possession does not always equate to higher scores, challenging common football assumptions. The implications of this research extend beyond sports analytics, providing insights into the complex dynamics of performance metrics and their interpretation, thereby enriching the strategic understanding of team sports."
+abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -24,13 +25,9 @@ library(palmerpenguins)
 
 # Introduction
 
-Football is the world's most popular sport, with a vast audience and professionals across the globe. Germany, with its reputation for football excellence, hosts the Bundesliga every year. Bundesliga is a league that draws global attention due to its high level of competition and skill. The data from this league is highly regarded for the precision and dependability, making it ideal for in-depth analysis. In this study, we examine data from the Bundesliga season 2023-2024 to better understand the outcomes of matches, particularly how ball possession relates to scoring goals.
+You can and should cross-reference sections and sub-sections. We use @citeR and @rohan.
 
-This study uses data from Kaggle for the year 2024 [@bundesliga_dataset_2024], applies Poisson and negative binomial regression models to closely examine the link between how often home team players have the ball and the number of goals they score. The aim is to see how keeping the ball influences the team's ability to score.
-
-Echoing Maher's article [@Maher1982], which instead of rejecting the Poisson model for football scores, further explored it by considering how well teams attack and defend, our study revisits these models with newest Bundesliga data. We're comparing the Poisson and the Negative Binomial models to figure out which one better reflects the number of goals in current football games. Through our analysis with the latest data, we aim to uncover which model truly captures the scoring trends in football today
-
-Our paper outlines the importance of analyzing match data, how we did our study, what we found, and why it's important. We show how our findings help us better understand football and its scores. Our research offers new insights for coaches, players, and anyone interested in the science behind the sport.
+The remainder of this paper is structured as follows. @sec-data....
 
 
 
