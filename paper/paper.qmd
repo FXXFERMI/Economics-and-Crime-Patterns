@@ -11,6 +11,7 @@ format: pdf
 number-sections: true
 toc: true
 bibliography: references.bib
+frontsize: 10pt
 ---
 
 ```{r}
@@ -120,7 +121,7 @@ selected_data <- vehicle_theft_summary[, c(2, 3)]
 kable(head(selected_data, 5), caption = "Sample of Compiled Vehicle Thetfs Dataset")
 ```
 
-## Data Measurement
+## Data Cleaning
 
 To ensure a coherent analysis, we synchronized the two datasets by aligning them according to common temporal identifiers, specifically month and year. The @tbl-analysisData is an example of final analysis dataset after merge CPI dataset and auto thefts dataset. This method allowed us to accurately correlate changes in the Consumer Price Index (CPI) with instances of vehicle thefts across the same time periods. The dataset includes 14 variables and 122 monthly observations from January 2014 through February 2024.
 
@@ -134,15 +135,15 @@ By adhering to these data verification protocols, our study ensures a high level
 
 ```{r}
 #| label: tbl-analysisData
-#| tbl-cap: Sample of Analysis Dataset
+#| tbl-cap: Sample of Analysis Dataset (includes only three CPI categories)
 #| echo: false
 
 
 selected_data <- cleaned_data[, c(1, 7, 3, 6, ncol(cleaned_data))]
-kable(head(selected_data), caption = "Sample of Analysis Dataset")
+kable(head(selected_data), caption = "Sample of Analysis Dataset (includes only three CPI categories)")
 ```
 
-## Data Distribution
+## Data Measurement
 
 ### Canada Consumer Price Index (CPI)
 
@@ -164,7 +165,7 @@ merge_data_filtered <- cleaned_data[, !names(cleaned_data) %in% c("All_items", "
 ```
 
 ::: {#fig-CPIDistribution}
-![](images/box_all_cpi.png){width="73%"}
+![](images/box_all_cpi.png){width="75%"}
 
 Box Plots for Distribution - all CPI categories
 :::
@@ -247,7 +248,7 @@ The goal of our modeling strategy is twofold. Firstly, we aim to evaluate the im
 
 Here we briefly describe the Bayesian multiple linear regression model used to investigate the relationships between economic conditions and vehicle thefts. Background details are included in [Appendix -@sec-model-details].
 
-## Model set-up
+## Model Set-up
 
 We define $y_i$ as the monthly count of vehicle thefts. The model includes thirteen Consumer Price Index (CPI) categories, each represented by a coefficient $\beta_1$ to $\beta_{13}$.
 
@@ -267,7 +268,7 @@ y_i|\mu_i, \sigma &\sim \text{Normal}(\mu_i, \sigma) \\
 ```
 We run the Bayesian model in R [@citeR] using the `rstanarm` package of @rstanarm. We apply Normal priors with a mean of zero and standard deviation of 2.5 are applied to each of the coefficients, providing a balance between allowing the data to inform the model and maintaining prior constraints to avoid overly flexible interpretations. The error variance $\sigma$ is assumed to follow an exponential distribution, emphasizing the assumption of non-negative error variability. This approach captures the nuanced effects of economic indicators on vehicle theft rates, modeling each category's potential impact separately.
 
-## Model justification
+## Model Justification
 
 We expect a notable relationship between the various CPI categories and the rates of vehicle thefts. In particular, economic factors such as $\beta_1$ (All_items), $\beta_6$ (Transportation), and $\beta_{12}$ (Gasoline) may significantly influence theft incidents due to their impact on the cost of living and mobility.
 
@@ -276,7 +277,7 @@ Given the economic context, categories like $\beta_9$ (Food) and $\beta_{10}$ (A
 # Results {#sec-results}
 
 ::: {#fig-TimeSeries}
-![](images/Time.png)
+![](images/Time.png){width="110%"}
 
 Time Series Plot for all CPI categories and Vehicle Thefts from 2014 to 2024
 :::
@@ -399,7 +400,7 @@ By pursuing these directions, future research can build on the current study’s
 
 # Additional dataset details {#sec-dataset-details}
 
-The @tbl-CPIData shows a sample dataset of CPI from @statscanCPI2023. The @tbl-AutoData shows a sample dataset of Vehicle Thetfs Dataset from @torontoPoliceAutoTheft2023.
+The @tbl-CPIData shows a sample dataset of CPI from @statscanCPI2023, it shows all the CPI categories in the dataset, while only have 3 observations. The @tbl-AutoData shows a sample dataset of Vehicle Thetfs Dataset from @torontoPoliceAutoTheft2023.
 
 ```{r}
 #| label: tbl-CPIData
