@@ -1,15 +1,15 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
+title: "Economics and Crime Patterns: The Interplay Between CPI Changes and Vehicle Theft Frequencies"
+subtitle: "Insights from Predictive Analytics and Visual Data Exploration"
 author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: LINK."
+  - Siqi Fei
+thanks: "Code and data are available at: <https://github.com/FXXFERMI/Inflation-and-Crime-Patterns.git>. Link to the Shiny App:  <https://siqi-fei.shinyapps.io/VehicleTheft_Inflation/>"
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "In this study, we researched the monthly incidence of vehicle thefts and inflation from 2014 to 2024 by using data sourced from the Toronto Police Service and Statistics Canada. We analyzed the data distribution and characteristics of the two datasets and combined both to conduct a correlation analysis by using Bayesian multiple linear regression model and a Shiny application. We found a significant positive correlation between the overall CPI and vehicle theft rates.  This finding suggests that higher inflation may be associated with an increased number of vehicle theft. This study highlights the importance of economic indicators in predicting criminal behaviour which in terms provide valuable insights for policymakers and economic analysts."
 format: pdf
 number-sections: true
+toc: true
 bibliography: references.bib
 ---
 
@@ -18,94 +18,282 @@ bibliography: references.bib
 #| warning: false
 #| message: false
 
+#### Workspace setup ####
 library(tidyverse)
-library(palmerpenguins)
-```
+library(here)
+library(modelsummary)
+library(tidyr)
+library(reshape2)
+library(corrplot)
+library(lubridate)
+library(dplyr)
+library(knitr)
+library(rstanarm)
+library(bayesplot)
 
+#### Load Data ####
+# originally imported via 01-data_cleaning.R file
+
+cleaned_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
+merge_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
+raw_data_cpi <- read.csv(here::here("data/analysis_data/analysis_data_CPI.csv"))
+vehicle_theft_summary <- read.csv(here::here("data/analysis_data/Draft_analysis_data_Vehicle.csv"))
+raw_data_auto <- read.csv(here::here("data/raw_data/Auto_Theft_Open_Data.csv"))
+
+model_matrix <- model.matrix(Total_Vehicle_Thefts ~ Recreation_education_and_reading + All_items + 
+                                    Goods + Household_operations_furnishings_equipment + 
+                                    Health_and_personal_care +
+                                    Transportation + 
+                                    Shelter + Services + Food + Alcoho_tobacco_cannabis +
+                                    Energy + Gasoline + Clothing_footwear, data = cleaned_data)
+
+```
 
 # Introduction
 
-You can and should cross-reference sections and sub-sections. We use @citeR and @rohan.
+In recent years, rapid global economic development has accelerated currency devaluation. During the pandemic, constrained economic output had led to significant job losses and a shortage in global supply chains. These factors have contributed to a sharp rise in inflation rates across Canada. Data from @statcanCPI indicates that these changes have made it increasingly difficult for people to afford their daily expenses. Meanwhile, regional crime rates have also significantly increased. According to the Canada Newswire @equite2023, auto theft trends in Ontario rose dramatically by 48.2%, with a vehicle now stolen every five minutes between 2021 and 2023.
 
-The remainder of this paper is structured as follows. @sec-data....
+@McIntoshLi2012 highlight a critical gap in understanding the economic efficiency of crime prevention programs within the Canadian context, emphasizing the need for evidence-based approaches in crime prevention.
 
+This study aims to fill this gap by examining the impact of Consumer Price Index (CPI) changes on vehicle theft rates over a ten-year period, from January 2014 to February 2024. Employing Bayesian multiple linear regression model, we analyzed the trends and variances in CPI across different sectors and correlated these economic indicators with the frequency of auto thefts in Toronto. The datasets were sourced from the Toronto Police Service @torontoPoliceAutoTheft2023 and Statistics Canada @statscanCPI2023. Our findings indicate that while an increase in the overall cost of living correlates with higher vehicle theft rates, the rise in Shelter CPI appears to inversely affect theft frequencies. Interestingly, other CPI categories such as food, transportation, health, and personal care did not show significant statistical influence on theft rates.
 
+The estimand of this study is the effect of changes in the CPI on vehicle theft rates, which is quantitatively explored through our models. This research provides valuable contributions in understanding how economic conditions affect crime rates which provides important insights for policymakers and economic analysts. By integrating data visualization and interactive tools via a Shiny app, this paper enhances user engagement and facilitates deeper exploration of the economic variables influencing crime rates.
+
+This paper is structured as follows: @sec-data introduces the datasets utilized for the analysis, offering insights into the variables of interest and their visual representations. @sec-model details the Bayesian multiple linear regression model applied to explore the relationship between different CPI indicators' change and vehicle theft rates. @sec-results presents the results and interpretation of the models, and @sec-discussion discusses the implications of these findings, the limitations of the current study, and directions for future research.
 
 # Data {#sec-data}
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+## Data Sources
+
+The databases used for this study primarily focus on the Consumer Price Index (CPI) in Canada and vehicle theft incidents in the Toronto area. We have utilized open data from @statscanCPI2023 and the @torontoPoliceAutoTheft2023. Statistics Canada released the latest update in April 2024 and the data set uses 2002 as the base year to record monthly changes in Canada’s CPI from January 2014 to February 2024 covering 15 different categories. The Toronto Police Service’s Auto Theft Open Data spans from January 2014 to March 2024, detailing each vehicle theft incident with its occurrence time and location.
+
+While other datasets were considered, the CPI data from Statistics Canada was chosen for its authoritative and wide coverage, and the Toronto Police Service's data was selected due to its reliability and detailed record of incidents over a decade. These sources provide the most relevant and reliable data for analyzing the relationship between economic conditions and crime rates.
+
+The analysis of this paper makes use of the R programming language [@citeR] for statistical computations and visualizing data. The tidyverse package [@citetidyverse] is installed to gain access to other important R packages, including the dplyr package [@citedplyr] used to manipulate and clean data, the readr package [@citereadr] to read and import data, the here package [@citehere] to create a path to specific saved files. The ggplot2 package [@citeggplot2], reshape2 package [@citereshape2], corrplot package [@citecorrplot] and lubridate package [@citelubridate] are used to create the data visualizations. And the modelsummary package [@citemodelsummary] to create summary tables.
+
+## Canada Consumer Price Index (CPI) Dataset
+
+### Sampling Strategy and Survey Methodology
+
+The Consumer Price Index (CPI) data set from Statistics Canada @statscanCPI2023, a sample represented in [Appendix -@sec-dataset-details], utilizes a multi-stage sampling strategy. It targets both urban and rural private households across Canada, while excluding non-representative groups such as inmates or individuals in collective households. This probability-based approach ensures a diverse demographic representation.
+
+Monthly price data collection relies on detailed specifications for a wide array of goods and services. This method allows for accurate tracking of price changes over time, using data from retail outlets and service providers. This broad item coverage accurately reflects Canadian consumer spending behaviours.
+
+### Variable of Interest
+
+For this study, we selected 13 major CPI categories:
+
+-   `All Items`: an aggregate measure of overall inflation.
+-   `Recreation,Education and Reading`: costs related to leisure activities, covering educational expenses and reading materials.
+-   `Goods`: including consumer products like electronics and clothing.
+-   `Household Operations, Furnishings and Equipment`: expenses for maintaining a household.
+-   `Health and Personal Care`: encompassing medical and health-related expenses.
+-   `Transportation`: expenses related to personal and public transport.
+-   `Shelter`: costs associated with housing.
+-   `Services`: various personal and professional services.
+-   `Food`: expenses on groceries and dining out.
+-   `Alcohol, Tobacco and Cannabis`: spending on alcoholic drinks, tobacco, and cannabis.
+-   `Energy`: household energy expenses.
+-   `Gasoline`: specifically fuel costs.
+-   `Clothing and Footwear`: spending on personal attire.
+
+All CPI data points are numeric and indexed to the base year of 2002, set at 100.
+
+## Toronto Vehicle Theft Dataset
+
+### Sampling Strategy and Survey Methodology
+
+The Toronto Police Service's dataset on auto theft @torontoPoliceAutoTheft2023 occurrences, a sample represented in [Appendix -@sec-dataset-details], is structured at the offense and vehicle level. Each reported occurrence can have multiple records, reflecting different Major Crime Indicators (MCIs) used to categorize each event. Data include the report date (REPORT_DATE) and the date the offense occurred (OCC_DATE), both standardized to UTC timezone to ensure uniformity. For privacy protection, exact locations of crimes are offset to the nearest road intersection, and the data excludes occurrences deemed unfounded—where an investigation determined that the reported offense did not occur or was not attempted.
+
+The auto theft dataset is updated quarterly, reflecting the dynamic nature of crime reporting. Additionally, all historical data ranges are provided to ensure coverage of trends over time. This dataset is intended to enhance public safety awareness by making detailed crime data accessible to the community while adhering to stringent privacy and data integrity standards.
+
+### Variable of Interest
+
+We have compiled this database to extract monthly vehicle theft frequencies, which serve as the primary data for this research. Featuring columns for `Year_Month` and `Total_Thefts` reflects a unique month-year combination and the corresponding count of vehicle thefts. The sample of compiled dataset represented below in @tbl-CompiledAutoData.
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
+#| label: tbl-CompiledAutoData
+#| tbl-cap: Sample of Compiled Vehicle Thetfs Dataset
 #| echo: false
 
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
+selected_data <- vehicle_theft_summary[, c(2, 3)]
+kable(head(selected_data, 5), caption = "Sample of Compiled Vehicle Thetfs Dataset")
 ```
 
-Talk more about it.
+## Data Measurement
 
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
+To ensure a coherent analysis, we synchronized the two datasets by aligning them according to common temporal identifiers, specifically month and year. The @tbl-analysisData is an example of final analysis dataset after merge CPI dataset and auto thefts dataset. This method allowed us to accurately correlate changes in the Consumer Price Index (CPI) with instances of vehicle thefts across the same time periods. The dataset includes 14 variables and 122 monthly observations from January 2014 through February 2024.
+
+Before analysis, we conducted a review of the datasets to ensure their integrity. This process included:
+
+-   Verification of Data Completeness: Although both datasets were initially found to be free of missing values and outliers, we performed additional checks to confirm the completeness and accuracy of all 122 observations. In cases where missing values were detected, we replaced them with the data from the preceding month.
+
+-   Consistency and Alignment Checks: We cross-validated the monthly CPI values against the reported vehicle thefts to ensure that each observation was correctly matched and no temporal misalignments were present.
+
+By adhering to these data verification protocols, our study ensures a high level of data quality, enabling a focused and reliable examination of how various economic conditions as depicted by CPI data correlate with trends in vehicle thefts across the Toronto area.
 
 ```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: tbl-analysisData
+#| tbl-cap: Sample of Analysis Dataset
 #| echo: false
+
+
+selected_data <- cleaned_data[, c(1, 7, 3, 6, ncol(cleaned_data))]
+kable(head(selected_data), caption = "Sample of Analysis Dataset")
+```
+
+## Data Distribution
+
+### Canada Consumer Price Index (CPI)
+
+```{r}
+#| include: false
 #| warning: false
 #| message: false
 
-analysis_data <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
+#### Plot Set Up ####
+# Pivot the data to long format for plotting
+data_long <- pivot_longer(cleaned_data, 
+                          cols = c(Recreation_education_and_reading, Goods, Household_operations_furnishings_equipment,
+                                   Health_and_personal_care, All_items, Transportation, Shelter, Services, Food,
+                                   Alcoho_tobacco_cannabis, Energy, Gasoline, Clothing_footwear),
+                          names_to = "Category", 
+                          values_to = "Index")
 
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
+merge_data_filtered <- cleaned_data[, !names(cleaned_data) %in% c("All_items", "Energy")]
 ```
 
-Talk way more about it. 
+::: {#fig-CPIDistribution}
+![](images/box_all_cpi.png){width="73%"}
 
+Box Plots for Distribution - all CPI categories
+:::
 
+The @fig-CPIDistribution shows the range of Consumer Price Index (CPI) values for 13 categories, illustrating the variability in price changes from 2014 to 2024. Some categories, like 'Alcohol, Tobacco, and Cannabis,' display wider ranges, indicating more pronounced fluctuations in prices over the years. Others, such as 'Clothing and Footwear,' have narrower boxes, suggesting steadier prices.
 
-# Model
+The median of each category, marked by a line in the box, provides a quick reference for the middle value of the data. Notably, several categories feature outliers, which point to occasional extremes in pricing that could be explored further.
 
-The goal of our modelling strategy is twofold. Firstly,...
+This box plot allows us to observe the distribution patterns of CPI values, serving as a basis for analyzing economic trends within these categories.
 
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
+### Toronto Vehicle Theft
+
+```{r}
+#| label: fig-Distribution_Thefts
+#| fig-cap: Distribution of Vehicle Thefts from 2014 to 2024
+#| echo: false
+#| warning: false
+#| message: false
+# Distribution Plot
+# Set up the plotting area
+par(mar = c(5, 5, 4, 2) + 0.1)
+
+# Create the histogram with a density curve
+hist(merge_data$Total_Vehicle_Thefts, 
+     breaks = 20, 
+     freq = FALSE, 
+     main = "Distribution of Vehicle Thefts", 
+     xlab = "Total Vehicle Thefts",
+     ylab = "Density",
+     col = "lightblue",
+     xlim = c(0, max(merge_data$Total_Vehicle_Thefts) * 1.1))
+
+# Add a density curve
+lines(density(merge_data$Total_Vehicle_Thefts), col = "darkred", lwd = 2)
+
+# Add a legend
+legend("topright", 
+       legend = c("Density Curve"), 
+       col = c("darkred"), 
+       lwd = c(2), 
+       bty = "n")
+
+# Add a rug plot to show individual data points
+rug(merge_data$Total_Vehicle_Thefts, col = "darkblue", lwd = 0.5)
+
+```
+
+The @fig-Distribution_Thefts with an overlaid density curve illustrates the distribution of total vehicle thefts. Most theft incidents cluster in the lower range of the scale, indicating a higher frequency of months with fewer thefts. The right-skewed distribution suggests that while most months have a moderate number of thefts, there are occasional months with significantly higher occurrences. The tail of the histogram, where it extends towards larger values, reflects these rarer, higher-theft months. The density curve highlights the overall shape of the distribution, emphasizing the concentration of data points around the mode.
+
+```{r}
+#| label: tbl-Distribution_Thefts
+#| tbl-cap: Summary statistics table of Total Vehicle Thefts from 2014 to 2024
+#| echo: false
+#| warning: false
+#| message: false
+#| 
+summary_table <- merge_data %>%
+  summarise(
+    Mean = mean(Total_Vehicle_Thefts, na.rm = TRUE),
+    Median = median(Total_Vehicle_Thefts, na.rm = TRUE),
+    SD = sd(Total_Vehicle_Thefts, na.rm = TRUE),
+    Min = min(Total_Vehicle_Thefts, na.rm = TRUE),
+    Max = max(Total_Vehicle_Thefts, na.rm = TRUE),
+    Q1 = quantile(Total_Vehicle_Thefts, 0.25, na.rm = TRUE),
+    Q3 = quantile(Total_Vehicle_Thefts, 0.75, na.rm = TRUE),
+    IQR = IQR(Total_Vehicle_Thefts, na.rm = TRUE),
+    Count = n()
+  )
+
+kable(summary_table, caption = "Descriptive Statistics of Total Vehicle Thefts")
+```
+
+The @tbl-Distribution_Thefts offers a direct insight into the distribution of total vehicle thefts over the study period. The mean thefts per month stand at 495.21, with a median lower at 421, indicating a skew in the data with some months experiencing higher theft counts. The standard deviation is substantial at 253.36, suggesting a wide variability in monthly theft incidents.
+
+The data range spans from a minimum of 201 thefts in a month to a maximum of 1164, revealing extreme fluctuations that could reflect varying external factors influencing theft rates. The first quartile (Q1) and the third quartile (Q3) are at 309 and 607.25 thefts respectively, with an interquartile range (IQR) of 298.25, which highlights the middle 50% of the data is less variable compared to the full range.
+
+# Model {#sec-model}
+
+The goal of our modeling strategy is twofold. Firstly, we aim to evaluate the impact of various Consumer Price Index (CPI) categories on the rates of vehicle thefts in Toronto. We explore which economic factors are significant predictors of vehicle theft occurrences. Secondly, we seek to provide estimates of the effects of these factors, quantifying how significant changes in CPI influence vehicle theft statistics.
+
+Here we briefly describe the Bayesian multiple linear regression model used to investigate the relationships between economic conditions and vehicle thefts. Background details are included in [Appendix -@sec-model-details].
 
 ## Model set-up
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+We define $y_i$ as the monthly count of vehicle thefts. The model includes thirteen Consumer Price Index (CPI) categories, each represented by a coefficient $\beta_1$ to $\beta_{13}$.
 
+```{=tex}
 \begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
+y_i|\mu_i, \sigma &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_1 \cdot \text{All\_items}_i + \beta_2 \cdot \text{Recreation\_education\_and\_reading}_i + \\
+&\quad + \beta_3 \cdot \text{Goods}_i + \beta_4 \cdot \text{Household\_operations\_furnishings\_equipment}_i + \\
+&\quad + \beta_5 \cdot \text{Health\_and\_personal\_care}_i + \beta_6 \cdot \text{Transportation}_i + \\
+&\quad + \beta_7 \cdot \text{Shelter}_i + \beta_8 \cdot \text{Services}_i + \beta_9 \cdot \text{Food}_i + \\
+&\quad + \beta_{10} \cdot \text{Alcohol\_tobacco\_cannabis}_i + \beta_{11} \cdot \text{Energy}_i + \beta_{12} \cdot \text{Gasoline}_i + \\
+&\quad + \beta_{13} \cdot \text{Clothing\_footwear}_i \\
+\alpha &\sim \text{Normal}(0, 2.5) \\
+\beta_1, \beta_2, \ldots, \beta_{13} &\sim \text{Normal}(0, 2.5) \\
+\sigma &\sim \text{Exponential}(1)
 \end{align}
+```
+We run the Bayesian model in R [@citeR] using the `rstanarm` package of @rstanarm. We apply Normal priors with a mean of zero and standard deviation of 2.5 are applied to each of the coefficients, providing a balance between allowing the data to inform the model and maintaining prior constraints to avoid overly flexible interpretations. The error variance $\sigma$ is assumed to follow an exponential distribution, emphasizing the assumption of non-negative error variability. This approach captures the nuanced effects of economic indicators on vehicle theft rates, modeling each category's potential impact separately.
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+## Model justification
 
+We expect a notable relationship between the various CPI categories and the rates of vehicle thefts. In particular, economic factors such as $\beta_1$ (All_items), $\beta_6$ (Transportation), and $\beta_{12}$ (Gasoline) may significantly influence theft incidents due to their impact on the cost of living and mobility.
 
-### Model justification
+Given the economic context, categories like $\beta_9$ (Food) and $\beta_{10}$ (Alcohol_tobacco_cannabis) might also influence crime rates, as changes in these indices often reflect shifts in the broader economy that could affect criminal behaviour. The inclusion of $\beta_4$ (Household_operations_furnishings_equipment) and $\beta_{13}$ (Clothing_footwear) is intended to capture the effects of economic conditions on consumer vulnerability to theft.
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+# Results {#sec-results}
 
-We can use maths by including latex between dollar signs, for instance $\theta$.
+::: {#fig-TimeSeries}
+![](images/Time.png)
 
+Time Series Plot for all CPI categories and Vehicle Thefts from 2014 to 2024
+:::
 
-# Results
+The @fig-TimeSeries illustrates the evolution of Consumer Price Index (CPI) categories alongside vehicle thefts from January 2014 through February 2024. Each line represents a different CPI category or the vehicle thefts, providing a visual representation of trends over time.
 
-Our results are summarized in @tbl-modelresults.
+-   The category of Total Vehicle Thefts (in pink) exhibits a notable increase starting around early 2021, reaching a peak in mid-2022 before a downward trend. This rise and subsequent fall may correlate with external factors affecting vehicle theft incidents, which warrants further investigation.
+
+-   The 'All_items' CPI category shows relative stability until it starts to rise around the same time as vehicle thefts, suggesting a possible relationship between overall price levels and theft incidents.
+
+-   Other CPI categories such as 'Health_and_personal_care', 'Clothing_footwear', and 'Household_operations_furnishings_equipment' demonstrate a stable trend with slight fluctuations, indicating less variability in these categories over the observed period.
+
+-   The 'Energy' and 'Gasoline' categories exhibit some volatility, reflecting market changes that could influence consumer behaviour and potentially crime rates.
+
+-   Interestingly, while most CPI categories remain within a tighter band, the 'Total Vehicle Thefts' category shows more pronounced movement, especially during the later years of the series. This could be indicative of underlying economic or social shifts impacting theft rates more significantly than changes in consumer prices.
+
+The model results are summarized in @tbl-modelresults.
 
 ```{r}
 #| echo: false
@@ -113,61 +301,207 @@ Our results are summarized in @tbl-modelresults.
 #| warning: false
 #| message: false
 
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
+bayesian_linear_model <-
+  readRDS(file = here::here("models/bayesian_linear_model.rds"))
 ```
 
 ```{r}
 #| echo: false
 #| eval: true
 #| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
+#| tbl-cap: "Explanatory models of number of Vehicle Thefts based on CPI"
 #| warning: false
 
 modelsummary::modelsummary(
   list(
-    "First model" = first_model
+    "Bayesian Linear Model" = bayesian_linear_model
   ),
   statistic = "mad",
   fmt = 2
 )
 ```
 
+Our analysis presents a robust relationship between CPI categories and vehicle thefts. The model, adjusting for multiple variables, offers a nuanced understanding of how different economic indicators influence theft rates.
 
+-   The intercept at -3458.80 establishes a baseline for the model; without any CPI influence, the model predicts a significantly negative number of thefts, which isn't possible in reality and suggests the model's reliance on the CPI predictors.
+-   The 'All_items' category shows a positive coefficient (52.25), indicating that a unit increase in this category is associated with an increase of approximately 52 vehicle thefts, signifying the strong effect of overall cost of living on theft incidents.
+-   Interestingly, 'Recreation_education_and_reading' shows a negative coefficient (-22.20), suggesting that higher expenditure in this category may be associated with a decrease in theft rates, possibly reflecting discretionary spending's correlation with reduced crime rates.
+-   'Goods' has a small positive effect (11.43), while 'Household_operations_furnishings_equipment' has a negative coefficient (-5.59), which might indicate that as people invest more in their homes, the rate of thefts slightly declines.
+-   'Services' stands out with a significant positive coefficient (50.08), highlighting the potential impact of service expenditures on theft rates, a factor that urban planners and policymakers may need to consider.
+-   'Shelter' has a negative coefficient (-32.67), which could imply that more spending on housing correlates with lower theft rates, a factor of interest in urban development.
+-   The coefficients for 'Food' (-0.33) and 'Health_and_personal_care' (0.77) are relatively small, indicating a less pronounced direct impact on vehicle theft rates.
 
+The model's R-squared value of 0.938 suggests a very high proportion of variance in theft rates is explained by these CPI variables, signaling a strong fit. The RMSE of 292.30 underscores the model's precision, with predictions on average about 292 units from the observed values.
 
-# Discussion
+# Discussion {#sec-discussion}
 
-## First discussion point {#sec-first-point}
+## Overview
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+This paper examined how changes in the Consumer Price Index (CPI) relate to vehicle theft rates. Our analysis considered multiple CPI categories to identify which aspects of economic change have an effect on crime.
 
-## Second discussion point
+## Insights on Pandemic
 
-## Third discussion point
+The pandemic brought significant changes to the Consumer Price Index (CPI), showcasing the economic shifts caused by global lockdowns and altered consumer behaviors. Notably, the 'All_items' CPI increased due to heightened demand and supply chain interruptions, escalating the cost of daily goods and services. Price fluctuations in the 'Energy' and 'Gasoline' sectors were marked by sharp volatility, reflecting decreased global demand and the impacts of oil price conflicts. Conversely, expenditures on 'Recreation_education_and_reading' remained stable, likely due to a shift in spending towards home-based activities during public restrictions.
 
-## Weaknesses and next steps
+Simultaneously, the pandemic's economic stress led to an increase in vehicle thefts, mirroring the surge in CPI. This rise particularly impacted categories critical for daily living, suggesting that economic pressures may drive individuals towards criminal activities as a coping mechanism. Changes in public movement and lockdown measures reshaped traditional crime patterns, indicating shifts in the timing and locations of criminal activities.
 
-Weaknesses and next steps should also be included.
+This period of profound economic uncertainty and enforced social restrictions clearly demonstrates the interconnectedness of economic factors and crime rates over time. It underscores the necessity for vigilant, responsive social and economic strategies during crises to effectively mitigate the escalation of crime, reflecting the enduring impact of such global events on societal norms and safety.
+
+## Insights on Economic Conditions and Crime Dynamics
+
+This study also explores the connection between Consumer Price Index (CPI) categories and vehicle theft rates in Canada over a decade. It finds that increases in the 'All_items' CPI, reflecting the overall cost of living, align with more vehicle thefts. However, spending in areas like recreation and education correlates with fewer thefts, suggesting discretionary spending may deter crime.
+
+The relationship between vehicle thefts and essential goods like 'Health_and_personal_care' and 'Clothing_footwear' appears less direct. Meanwhile, 'Energy' and 'Gasoline' prices show unique patterns, indicating market fluctuations might influence theft rates differently.
+
+By examining CPI categories separately, the study highlights how economic conditions affect crime. It offers insights that could guide policies for economic management and crime prevention, showing how various economic pressures impact crime differently and underscoring the role of economic analysis in improving societal conditions.
+
+## Limitations
+
+This study aimed to explore the impact of economic changes on crime rates. However, it faces several limitations:
+
+1.  **Scope of Economic Factors:** The research focused on CPI and vehicle thefts but did not include other potentially influential economic factors such as unemployment rates or income disparity. Expanding the range of economic indicators could provide a broader understanding of what drives crime rates.
+
+2.  **Geographic Limitation:** The findings are based on data from Toronto and may not apply to other regions with different socio-economic conditions. Future studies could analyze data from multiple regions to draw more general conclusions.
+
+3.  **Population Bias:** As a major urban center, Toronto's large population might influence the study results, potentially making them less applicable to smaller or rural areas. Including a more varied set of locations could help balance this bias.
+
+4.  **Impact of the Pandemic:** The study acknowledges the pandemic's effects but does not analyze them in depth. Further research could more closely examine how specific aspects of the pandemic influenced economic and crime trends.
+
+5.  **Data Reliability:** The study relies on reported crime data and CPI, which could be subject to underreporting or inconsistencies in data collection. More rigorous data verification could strengthen the findings.
+
+6.  **Causal Pathways:** The study does not investigate how economic changes directly lead to variations in crime rates. Future research might include qualitative approaches to better understand the causal relationships involved.
+
+## Future Directions
+
+Given the limitations identified in the study, here are what we can do in the future study:
+
+1.  **Broader Economic Indicators**: Future studies should incorporate a wider range of economic indicators, including unemployment rates, income levels, and economic policy changes, to more fully understand their impact on crime rates.
+
+2.  **Expanded Geographic Scope**: To address the geographic limitation, subsequent research could include data from multiple cities and rural areas across different countries. This would help determine if the findings from Toronto are applicable elsewhere or if local conditions significantly influence crime dynamics.
+
+3.  **Diverse Demographic Analysis**: Investigating how economic changes affect different demographic groups could uncover nuanced patterns of how economic conditions influence crime rates among various populations.
+
+4.  **In-depth Pandemic Analysis**: A focused study on the pandemic period could clarify how temporary economic disruptions and social restrictions specifically affected crime rates, providing insights into managing crime during crises.
+
+5.  **Enhanced Data Collection and Verification**: To improve data reliability, future research should use more rigorous methods for data collection and verification. This could involve cross-referencing crime data with other sources or using advanced statistical techniques to handle potential data inaccuracies.
+
+6.  **Causal Research**: Implementing mixed-methods approaches, including qualitative research, could help elucidate the causal pathways between economic conditions and crime, offering a clearer picture of the underlying mechanisms.
+
+7.  **Policy Impact Studies**: Researching the effects of specific economic and social policies on crime rates could provide valuable feedback for policymakers, helping to design interventions that effectively address the economic drivers of crime.
+
+By pursuing these directions, future research can build on the current study’s findings and address its shortcomings, leading to a deeper understanding of the complex relationship between economics and crime.
 
 \newpage
 
 \appendix
 
-# Appendix {-}
+# Appendix {.unnumbered}
+
+# Additional dataset details {#sec-dataset-details}
+
+The @tbl-CPIData shows a sample dataset of CPI from @statscanCPI2023. The @tbl-AutoData shows a sample dataset of Vehicle Thetfs Dataset from @torontoPoliceAutoTheft2023.
+
+```{r}
+#| label: tbl-CPIData
+#| tbl-cap: Sample of CPI Dataset
+#| echo: false
 
 
-# Additional data details
+selected_data <- raw_data_cpi[, c(1, 7, 3, 6)]
+kable(head(selected_data, 15), caption = "Sample of CPI Dataset")
+```
+
+```{r}
+#| label: tbl-AutoData
+#| tbl-cap: Sample of Vehicle Thetfs Dataset
+#| echo: false
+
+selected_data <- raw_data_auto[, c(5, 6, 12, 13)]
+kable(head(selected_data), caption = "Sample of Vehicle Thetfs Dataset")
+```
 
 # Model details {#sec-model-details}
 
+## Shiny App - Data Visualization
+
+We developed a Shiny application to facilitate interactive exploration of the dataset derived from our study. The application, built with the R packages `shiny` [@citeShiny], `ggplot2` [@citeggplot2], and `DT` [@citeDT], allows users to dynamically view the relationships between various Consumer Price Index (CPI) categories and vehicle theft occurrences. Upon selection of a CPI category from the sidebar, the main panel updates to display a scatter plot illustrating the correlation with vehicle thefts, complemented by a regression line to indicate trends. The tool also features a downloadable data option, enabling users to export the currently viewed data subset for further analysis. This interactive approach promotes a deeper engagement with the data and supports additional hypothesis generation based on visual insights.
+
+The @fig-LPAll-items shows a sample scenario in the shiny app. The shiny app can be found through link: <https://siqi-fei.shinyapps.io/VehicleTheft_Inflation/>
+
+```{r}
+#| label: fig-LPAll-items
+#| fig-cap: Relationship between All-items CPI and Vehicle Thefts
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-width: 10
+#| fig-height: 5
+ggplot(cleaned_data, aes(x = All_items, y = Total_Vehicle_Thefts)) +
+  geom_point() + # This adds the scatter plot points
+  geom_smooth(method = "lm", se = FALSE) + # This adds a regression line without a confidence interval
+  labs(title = "Relationship between All-items CPI and Vehicle Thefts",
+       x = "All-items CPI",
+       y = "Total Vehicle Thefts") +
+  theme_minimal() # This applies a minimal theme to the plot
+```
+
+```{r}
+#| label: fig-LPServices
+#| fig-cap: Relationship between Services CPI and Vehicle Thefts
+#| echo: false
+#| warning: false
+#| message: false
+#| eval: false
+
+ggplot(cleaned_data, aes(x = Services, y = Total_Vehicle_Thefts)) +
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Relationship between Services CPI and Vehicle Thefts",
+       x = "All-items CPI",
+       y = "Total Vehicle Thefts") +
+  theme_minimal() 
+```
+
+```{r}
+#| label: fig-LPGoods
+#| fig-cap: Relationship between Goods CPI and Vehicle Thefts
+#| echo: false
+#| warning: false
+#| message: false
+#| eval: false
+
+ggplot(cleaned_data, aes(x = Goods, y = Total_Vehicle_Thefts)) +
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Relationship between Goods CPI and Vehicle Thefts",
+       x = "All-items CPI",
+       y = "Total Vehicle Thefts") +
+  theme_minimal() 
+```
+
+```{r}
+#| label: fig-LPRecreation_education_and_reading
+#| fig-cap: Relationship between Recreation, Education and Reading CPI and Vehicle Thefts
+#| echo: false
+#| warning: false
+#| message: false
+#| eval: false
+
+ggplot(merge_data_filtered, aes(x = Recreation_education_and_reading)) +
+  geom_point(aes(y = Total_Vehicle_Thefts)) +
+  geom_smooth(aes(y = Total_Vehicle_Thefts), method = "lm", se = FALSE) +
+  facet_wrap(~., scales = "free", ncol = 2) +
+  labs(title = "Relationship between CPI Categories (excluding All-items and Energy) and Vehicle Thefts",
+       x = "CPI Category",
+       y = "Total Vehicle Thefts")
+
+```
+
 ## Posterior predictive check
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
+In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows how closely the simulated data aligns with our observed data, and highlighting the model's predictive accuracy.
 
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows the influence of the observed data on our initial assumptions and the resulting adjustments to our parameter estimates.
 
 ```{r}
 #| eval: true
@@ -179,43 +513,16 @@ In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. Th
 #| fig-cap: "Examining how the model fits, and is affected by, the data"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
+pp_check(bayesian_linear_model, type = "hist", nsamples = 100)
 
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
+bayesplot::mcmc_areas(
+  as.array(bayesian_linear_model),
+  pars = c("All_items", "Recreation_education_and_reading", "Goods", "Household_operations_furnishings_equipment", "Health_and_personal_care", "Transportation", "Shelter","Services", "Food", "Alcoho_tobacco_cannabis", "Energy","Gasoline", "Clothing_footwear"), # specify your parameters
+  prob = 0.95
+)
+
 ```
-
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
-```
-
-
 
 \newpage
 
-
 # References
-
-

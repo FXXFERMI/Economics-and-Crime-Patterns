@@ -23,7 +23,7 @@ library(testthat)
 library(tidyverse)
 
 #### Load Data ####
-merge_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
+transposed_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
 raw_data_cpi <- read.csv(here::here("data/analysis_data/analysis_data_CPI.csv"))
 vehicle_theft_wide <- read.csv(here::here("data/analysis_data/analysis_data_Vehicle.csv"))
 
@@ -60,17 +60,17 @@ test_that("Vehicle theft data has correct number of columns", {
 
 # Test that the merged dataset has the correct dimensions
 test_that("Merged data has correct dimensions", {
-  expect_equal(nrow(merge_data), 122)
-  expect_equal(ncol(merge_data), 17)
+  expect_equal(nrow(transposed_data), 122)
+  expect_equal(ncol(transposed_data), 15)
 })
 
 # Test that the merged dataset has no NA values
 test_that("Merged data has no NA values", {
-  expect_true(all(complete.cases(merge_data)))
+  expect_true(all(complete.cases(transposed_data)))
 })
 
 # Test that all columns in CPI data are numeric after conversion
 test_that("CPI data contains only numeric columns", {
-  expect_true(all(sapply(merge_data[-1], is.numeric)))
+  expect_true(all(sapply(transposed_data[-1], is.numeric)))
 })
 

@@ -21,39 +21,60 @@ library(tidyverse)
 # Set seed for reproducibility
 set.seed(42)
 
-# Create a sequence of months and years from January 2014 to March 2024
+# Create a sequence of months and years from January 2014 to Feb. 2024
 months <- rep(1:12, times = 10)  # 12 months for each year (2014 to 2023)
-months <- c(months, 1:3)  # Add first three months of 2024
-print(months)
+months <- c(months, 1:2)  # Add first two months of 2024
 years <- rep(2014:2023, each = 12)  # 10 years (2014 to 2023)
-print(years)
+years <- c(years, rep(2024, 2)) # two year rows for 2024
+
+#print(years)
+#print(months)
+
+# Simulate data for Auto Theft Dataset
+
+# Initialize an empty vector to store increasing values
+increasing_values <- numeric(length(months))
+
+# Set the initial value
+initial_value <- 250
+
+# Generate increasing values with random increments
+for (i in 1:length(months)) {
+  random_increment <- sample(5:15, 1)  # Random increment between 5 and 15
+  increasing_values[i] <- initial_value + random_increment * i
+}
+
 
 # Simulate data for Auto Theft Dataset
 auto_theft <- data.frame(
   month = months,
   year = years,
-  Total_number = sample(100:500, size = length(months), replace = TRUE)
+  Total_Vehicle_Thefts = increasing_values
 )
 
 # Simulate data for CPI Dataset
+initial_cpi <- 100  # Initial CPI value in 2002
+
 cpi <- data.frame(
   month = months,
   year = years,
-  Food = runif(length(months), 100, 200),
-  Shelter = runif(length(months), 120, 220),
-  Clothing_and_footwear = runif(length(months), 80, 180),
-  Gasoline = runif(length(months), 90, 190),
-  Health_and_personal_care = runif(length(months), 100, 200),
-  Goods = runif(length(months), 110, 210),
-  Household_operations_furnishings_and_equipment = runif(length(months), 130, 230),
-  Alcoholic_beverages_tobacco_products_and_recreational_cannabis = runif(length(months), 140, 240),
-  Transportation = runif(length(months), 70, 170),
-  Recreation_education_and_reading = runif(length(months), 90, 190),
-  Energy = runif(length(months), 80, 180),
-  Services = runif(length(months), 110, 210)
+  All_items = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),  # Simulate increasing values with random increments
+  Food = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Shelter = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Clothing_and_footwear = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Gasoline = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Health_and_personal_care = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Goods = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Household_operations_furnishings_and_equipment = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Alcoholic_beverages_tobacco_products_and_recreational_cannabis = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Transportation = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Recreation_education_and_reading = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Energy = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05))),
+  Services = cumprod(c(initial_cpi, runif(length(months) - 1, 0.95, 1.05)))
 )
-
+# Merge two data sets
 simulate_data <- merge(auto_theft, cpi, by = c("month", "year"))
+
 #### Save data ####
 
 # Writing to a CSV file
@@ -63,7 +84,7 @@ write.csv(simulate_data, "data/simulate_data/Auto_Theft_and_CPI_Inflation_Toront
 #### Plotting ####
 
 # Plot auto theft trend over time
-auto_theft_plot <- ggplot(simulate_data, aes(x = as.Date(paste(year, month, "01", sep = "-")), y = Total_number)) +
+auto_theft_plot <- ggplot(simulate_data, aes(x = as.Date(paste(year, month, "01", sep = "-")), y = Total_Vehicle_Thefts)) +
   geom_line(color = "blue") +
   labs(x = "Date", y = "Auto Theft Incidents", title = "Auto Theft Incidents Over Time") +
   theme_minimal()
@@ -81,3 +102,4 @@ print(auto_theft_plot)
 #### Save plot ####
 # Saving the plot
 ggsave("data/simulate_data/auto_theft_plot.png", plot = auto_theft_plot, width = 10, height = 6, dpi = 300)
+

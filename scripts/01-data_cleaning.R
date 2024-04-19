@@ -175,6 +175,7 @@ merge_data <- merge_data %>%
 write_csv(merge_data, "data/analysis_data/analysis_data.csv")
 write_csv(raw_data_cpi, "data/analysis_data/analysis_data_CPI.csv")
 write_csv(vehicle_theft_wide, "data/analysis_data/analysis_data_Vehicle.csv")
+write_csv(vehicle_theft_summary, "data/analysis_data/draft_analysis_data_Vehicle.csv")
 
 
 #### Additional Clean ####
@@ -197,8 +198,19 @@ transposed_data <- transposed_data[-1, ]
 transposed_data <- tibble::rownames_to_column(transposed_data, var = "Month_Year")
 transposed_data[,-1] <- lapply(transposed_data[,-1], as.numeric)
 
+
+# Remove columns under headers All_items_excluding_food_and_energy and All_items_excluding_energy
+transposed_data <- subset(transposed_data, select = -c(All_items_excluding_food_and_energy, All_items_excluding_energy))
+
+# Get the index of the column with header Total_Vehicle_Thefts
+col_index <- which(names(transposed_data) == "Total_Vehicle_Thefts")
+
+# Move the column to the third position
+transposed_data <- transposed_data[, c(setdiff(seq_along(transposed_data), col_index), col_index)]
+
 # Check the structure
 #str(transposed_data)
 
 #### Save data ####
 write_csv(transposed_data, "data/analysis_data/analysis_data.csv")
+
