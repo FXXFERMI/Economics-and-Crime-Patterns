@@ -79,7 +79,7 @@ This project is licensed under the MIT License. See the LICENSE file in the repo
 
 ## Contact
 
-For any queries regarding this study, please contact Siqi Fei at [fermi.fei\@mail.utoronto.ca](mailto:fermi.fei@mail.utoronto.ca){.email}. Further materials and updates can be found at [GitHub repository](https://github.com/FXXFERMI/Modelling_association_football_scores.git).
+For any queries regarding this study, please contact Siqi Fei at [fermi.fei\@mail.utoronto.ca](mailto:fermi.fei@mail.utoronto.ca){.email}. Further materials and updates can be found at [GitHub repository](https://github.com/FXXFERMI/Inflation-and-Crime-Patterns.git).
 
 ## LLM usage
 
