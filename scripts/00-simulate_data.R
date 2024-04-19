@@ -96,8 +96,6 @@ for (col in names(simulate_data)[4:ncol(simulate_data)]) {
     scale_y_continuous(sec.axis = sec_axis(~., name = "CPI"), name = "Auto Theft Incidents")
 }
 
-# Show the plot
-print(auto_theft_plot)
 
 #### Save plot ####
 # Saving the plot

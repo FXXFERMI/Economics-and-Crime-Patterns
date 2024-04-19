@@ -5,7 +5,7 @@
 # Date: 05 April 2024
 # Contact: fermi.fei@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: The script requires the 'tidyverse', 'lubridate', and 'caret' packages for data 
+# Pre-requisites: The script requires the `rstanarm`, 'tidyverse', 'lubridate', and 'caret' packages for data 
 #                 manipulation, date handling, and machine learning modeling.
 # Additional Notes: This script assumes the data has been preprocessed and is ready for modeling.
 
@@ -44,7 +44,7 @@ print(summary(bayesian_linear_model))
 # Diagnostic plots for the Bayesian regression model
 plot(bayesian_linear_model)
 
-# If you need to create a more detailed summary with 'modelsummary'
+# create a more detailed summary with 'modelsummary'
 modelsummary(bayesian_linear_model)
 
 #### Save model ####

@@ -27,7 +27,6 @@ transposed_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
 raw_data_cpi <- read.csv(here::here("data/analysis_data/analysis_data_CPI.csv"))
 vehicle_theft_wide <- read.csv(here::here("data/analysis_data/analysis_data_Vehicle.csv"))
 
-
 #### Test data ####
 
 #### Tests for CPI Data Cleaning ####
@@ -73,4 +72,6 @@ test_that("Merged data has no NA values", {
 test_that("CPI data contains only numeric columns", {
   expect_true(all(sapply(transposed_data[-1], is.numeric)))
 })
+
+
 

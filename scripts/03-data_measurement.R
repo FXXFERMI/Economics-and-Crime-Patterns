@@ -9,7 +9,9 @@
 #                 date handling. Ensure that the raw data is in the specified directory.
 # Additional Notes: This script generates a cleaned dataset saved in a standard CSV format for use in modeling.
 
-#### Set Up ###
+#### Workspace Setup ###
+
+# Load necessary libraries for data manipulation and visualization
 #install.packages("tidyr")
 #install.packages("corrplot")
 #install.packages("lubridate")
@@ -20,13 +22,15 @@ library(corrplot)
 library(lubridate)
 
 #### Load Data ####
+
+# Load datasets from specified paths
 merge_data <- read.csv(here::here("data/analysis_data/analysis_data.csv"))
 raw_data_cpi <- read.csv(here::here("data/analysis_data/analysis_data_CPI.csv"))
 vehicle_theft_wide <- read.csv(here::here("data/analysis_data/analysis_data_Vehicle.csv"))
 
 #### CPI Data Measurements ####
 
-# Pivot the data to long format for plotting
+# Transform CPI data from wide to long format to facilitate plotting
 data_long <- pivot_longer(merge_data, 
                           cols = c(Recreation_education_and_reading, Goods, Household_operations_furnishings_equipment,
                                    Health_and_personal_care, All_items, Transportation, Shelter, Services, Food,
@@ -34,7 +38,7 @@ data_long <- pivot_longer(merge_data,
                           names_to = "Category", 
                           values_to = "Index")
 
-# Scatter Plot with Regression Line
+# Create scatter plots with regression lines for CPI categories vs vehicle thefts
 ggplot(merge_data, aes(x = All_items, y = Total_Vehicle_Thefts)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE) +
@@ -49,7 +53,7 @@ ggplot(merge_data, aes(x = Energy, y = Total_Vehicle_Thefts)) +
        x = "Energy CPI",
        y = "Total Vehicle Thefts")
 
-# Exclude All_items and Energy CPI categories
+# Excluding specific CPI categories for focused analysis
 merge_data_filtered <- merge_data[, !names(merge_data) %in% c("All_items", "Energy")]
 
 # Plot linear regression for each CPI category
@@ -98,7 +102,7 @@ legend("topright",
        bty = "n")
 
 # Add a rug plot to show individual data points
-rug(merge_data$Total_Vehicle_Thefts, col = "darkblue", lwd = 0.5)
+rug(merge_data$Total_Vehicle_Thefts, col = "darkblue", lwd = 0.5) # Show data points
 
 
 # Convert the Month_Year to Date format for easier plotting

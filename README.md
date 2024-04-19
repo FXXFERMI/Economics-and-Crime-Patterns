@@ -30,6 +30,7 @@ This repository contains the research paper, datasets, and supplementary materia
 
         -   `box_all_cpi.png`: Box plot image showing the distribution of all CPI categories analyzed in the study.
         -   `Time.png`: Time series plot illustrating trends and patterns in both CPI and vehicle thefts over the study period.
+        -   `Shiny App.png`: A sample screenshot of the Shiny app
 -   `scripts/`:
     -   `00-simulate_data.R`: Script for generating simulated data to test model robustness under various scenarios.
     -   `01-data_cleaning.R`: Script for cleaning and preprocessing the raw data from both CPI and vehicle theft datasets.
